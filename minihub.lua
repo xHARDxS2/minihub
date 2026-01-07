@@ -1,5 +1,5 @@
 -- ==============================
--- MINI HUB CORRIGIDO FINAL
+-- MINI HUB FINAL CORRIGIDO
 -- ==============================
 
 -- SERVICES
@@ -15,13 +15,11 @@ local Player = Players.LocalPlayer
 
 local jumpOn = false
 local autoTpOn = false
-
 local espPlayersOn = false
-local espBrainrotOn = false
-local espBaseOn = false
 
 local savedBaseCFrame = nil
 local baseMarker
+local canTeleport = true
 
 -- ==============================
 -- ANTI AFK
@@ -37,10 +35,9 @@ end)
 -- GUI
 -- ==============================
 
-local ScreenGui = Instance.new("ScreenGui")
+local ScreenGui = Instance.new("ScreenGui", Player.PlayerGui)
 ScreenGui.Name = "MiniHub"
 ScreenGui.ResetOnSpawn = false
-ScreenGui.Parent = Player:WaitForChild("PlayerGui")
 
 local Main = Instance.new("Frame", ScreenGui)
 Main.Size = UDim2.new(0,260,0,360)
@@ -71,7 +68,7 @@ local function createButton(text, posY, callback)
 end
 
 -- ==============================
--- INFINITE JUMP SEGURO
+-- INFINITE JUMP (SEGURO)
 -- ==============================
 
 createButton("Infinite Jump: OFF", 50, function(btn)
@@ -82,14 +79,14 @@ end)
 UserInputService.JumpRequest:Connect(function()
     if jumpOn then
         local hum = Player.Character and Player.Character:FindFirstChildOfClass("Humanoid")
-        if hum then
-            hum:ChangeState(Enum.HumanoidStateType.Landed)
+        if hum and hum:GetState() ~= Enum.HumanoidStateType.Dead then
+            hum:ChangeState(Enum.HumanoidStateType.Jumping)
         end
     end
 end)
 
 -- ==============================
--- SALVAR BASE + MARCADOR
+-- SALVAR BASE + MARCADOR VISUAL
 -- ==============================
 
 createButton("Salvar Base", 90, function()
@@ -98,9 +95,7 @@ createButton("Salvar Base", 90, function()
 
     savedBaseCFrame = hrp.CFrame
 
-    if baseMarker then
-        baseMarker:Destroy()
-    end
+    if baseMarker then baseMarker:Destroy() end
 
     local sphere = Instance.new("Part")
     sphere.Shape = Enum.PartType.Ball
@@ -121,7 +116,7 @@ createButton("Salvar Base", 90, function()
     beam.Attachment1 = a1
     beam.Width0 = 0.1
     beam.Width1 = 0.1
-    beam.Color = ColorSequence.new(Color3.fromRGB(0,150,255))
+    beam.Color = ColorSequence.new(sphere.Color)
     beam.FaceCamera = true
     beam.Parent = sphere
 
@@ -129,7 +124,7 @@ createButton("Salvar Base", 90, function()
 end)
 
 -- ==============================
--- AUTO TP BRAINROT INVISÍVEL
+-- AUTO TP BRAINROT (INVÍSIVEL)
 -- ==============================
 
 createButton("Auto TP Brainrot: OFF", 130, function(btn)
@@ -137,47 +132,65 @@ createButton("Auto TP Brainrot: OFF", 130, function(btn)
     btn.Text = autoTpOn and "Auto TP Brainrot: ON" or "Auto TP Brainrot: OFF"
 end)
 
-local function tryTeleport()
-    if not autoTpOn or not savedBaseCFrame then return end
-    task.wait(0.1)
+local function teleportToBase()
+    if not autoTpOn or not savedBaseCFrame or not canTeleport then return end
+    canTeleport = false
+
+    task.wait(0.15)
+
     local hrp = Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
     if hrp then
         hrp.CFrame = savedBaseCFrame
     end
+
+    task.delay(2, function()
+        canTeleport = true
+    end)
 end
 
-local function watchBrainrot(char)
+local function watchCharacter(char)
     char.DescendantAdded:Connect(function(obj)
         if obj:IsA("Weld") or obj:IsA("WeldConstraint") or obj:IsA("Motor6D") then
-            tryTeleport()
+            teleportToBase()
         end
     end)
 end
 
-if Player.Character then
-    watchBrainrot(Player.Character)
-end
-Player.CharacterAdded:Connect(watchBrainrot)
+if Player.Character then watchCharacter(Player.Character) end
+Player.CharacterAdded:Connect(watchCharacter)
 
 -- ==============================
--- ESP PLAYERS
+-- ESP PLAYERS (AUTO REAPLICA)
 -- ==============================
+
+local function applyESP(plr)
+    if plr ~= Player and plr.Character then
+        if espPlayersOn and not plr.Character:FindFirstChildOfClass("Highlight") then
+            local h = Instance.new("Highlight", plr.Character)
+            h.FillColor = Color3.fromRGB(0,255,0)
+        end
+    end
+end
 
 createButton("ESP Players: OFF", 170, function(btn)
     espPlayersOn = not espPlayersOn
     btn.Text = espPlayersOn and "ESP Players: ON" or "ESP Players: OFF"
 
     for _,plr in ipairs(Players:GetPlayers()) do
-        if plr ~= Player and plr.Character then
+        if not espPlayersOn and plr.Character then
             local h = plr.Character:FindFirstChildOfClass("Highlight")
-            if espPlayersOn and not h then
-                h = Instance.new("Highlight", plr.Character)
-                h.FillColor = Color3.fromRGB(0,255,0)
-            elseif not espPlayersOn and h then
-                h:Destroy()
-            end
+            if h then h:Destroy() end
+        else
+            applyESP(plr)
         end
     end
 end)
 
-print("MiniHub carregado com sucesso")
+Players.PlayerAdded:Connect(function(plr)
+    plr.CharacterAdded:Connect(function()
+        task.wait(1)
+        applyESP(plr)
+    end)
+end)
+
+print("MiniHub FINAL carregado com sucesso")
