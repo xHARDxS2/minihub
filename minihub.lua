@@ -107,7 +107,6 @@ CreateButton("ESP Players: OFF", 10, function(btn)
                 h = Instance.new("Highlight")
                 h.Name = "XHARDXS2_ESP_PLAYER"
                 h.FillColor = Color3.fromRGB(0,255,0)
-                h.OutlineColor = Color3.new(0,0,0)
                 h.Parent = plr.Character
             elseif not espPlayers and h then
                 h:Destroy()
@@ -117,24 +116,37 @@ CreateButton("ESP Players: OFF", 10, function(btn)
 end)
 
 -- ======================================
--- ESP BASE / OBJETOS
+-- ESP BASE / OBJETOS (CORRIGIDO)
 -- ======================================
+
+local function applyBaseESP()
+    for _,obj in ipairs(workspace:GetDescendants()) do
+        if obj:IsA("Model") or obj:IsA("Part") then
+            local name = obj.Name:lower()
+
+            if name:find("base") or name:find("brainrot") then
+                if espBase and not obj:FindFirstChild("XHARDXS2_ESP_BASE") then
+                    local h = Instance.new("Highlight")
+                    h.Name = "XHARDXS2_ESP_BASE"
+                    h.FillColor = Color3.fromRGB(0,150,255)
+                    h.OutlineColor = Color3.new(0,0,0)
+                    h.Parent = obj
+                end
+            end
+        end
+    end
+end
 
 CreateButton("ESP Base/Objetos: OFF", 55, function(btn)
     espBase = not espBase
     btn.Text = espBase and "ESP Base/Objetos: ON" or "ESP Base/Objetos: OFF"
 
-    for _,obj in ipairs(workspace:GetDescendants()) do
-        if obj:IsA("Model") and obj.Name:lower():find("base") then
-            if espBase then
-                local h = Instance.new("Highlight")
-                h.Name = "XHARDXS2_ESP_BASE"
-                h.FillColor = Color3.fromRGB(0,150,255)
-                h.Parent = obj
-            else
-                local h = obj:FindFirstChild("XHARDXS2_ESP_BASE")
-                if h then h:Destroy() end
-            end
+    if espBase then
+        applyBaseESP()
+    else
+        for _,obj in ipairs(workspace:GetDescendants()) do
+            local h = obj:FindFirstChild("XHARDXS2_ESP_BASE")
+            if h then h:Destroy() end
         end
     end
 end)
@@ -177,20 +189,20 @@ local function teleportWithCarpet()
 
     hrp.Anchored = true
 
-    local tween = TweenService:Create(
+    TweenService:Create(
         carpet,
-        TweenInfo.new(1.8, Enum.EasingStyle.Linear),
+        TweenInfo.new(1.6, Enum.EasingStyle.Linear),
         {CFrame = savedBaseCFrame * CFrame.new(0,-3,0)}
-    )
+    ):Play()
 
-    tween:Play()
-    tween.Completed:Wait()
+    task.wait(1.6)
 
     hrp.CFrame = savedBaseCFrame
     hrp.Anchored = false
     carpet:Destroy()
 end
 
+-- DETECTA BRAINROT INVISÍVEL
 local function watchBrainrot(char)
     char.DescendantAdded:Connect(function(obj)
         if autoTpBase and (obj:IsA("Weld") or obj:IsA("WeldConstraint") or obj:IsA("Motor6D")) then
