@@ -1,5 +1,5 @@
 -- ======================================
--- XHARDXS2 HUB | STEAL A BRAINROT
+-- XHARDXS2 HUB | STEAL A BRAINROT (FIXED)
 -- ======================================
 
 repeat task.wait() until game:IsLoaded()
@@ -13,35 +13,33 @@ local Player = Players.LocalPlayer
 local espPlayers = false
 local espBase = false
 local autoTpBase = false
-local savedBaseCFrame = nil
+local savedBaseCFrame
 
 -- ======================================
 -- GUI
 -- ======================================
 
-local ScreenGui = Instance.new("ScreenGui", Player:WaitForChild("PlayerGui"))
+local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "XHARDXS2"
 ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = Player:WaitForChild("PlayerGui")
 
 local Main = Instance.new("Frame", ScreenGui)
-Main.Size = UDim2.new(0, 260, 0, 340)
-Main.Position = UDim2.new(0, 20, 0.3, 0)
+Main.Size = UDim2.new(0,260,0,340)
+Main.Position = UDim2.new(0,20,0.3,0)
 Main.BackgroundColor3 = Color3.fromRGB(25,25,25)
-Main.BorderSizePixel = 0
 Main.Active = true
 Main.Draggable = true
-Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 12)
+Instance.new("UICorner", Main).CornerRadius = UDim.new(0,12)
 
--- TOP BAR
 local TopBar = Instance.new("Frame", Main)
-TopBar.Size = UDim2.new(1, 0, 0, 40)
+TopBar.Size = UDim2.new(1,0,0,40)
 TopBar.BackgroundColor3 = Color3.fromRGB(20,20,20)
-TopBar.BorderSizePixel = 0
-Instance.new("UICorner", TopBar).CornerRadius = UDim.new(0, 12)
+Instance.new("UICorner", TopBar).CornerRadius = UDim.new(0,12)
 
 local Title = Instance.new("TextLabel", TopBar)
-Title.Size = UDim2.new(1, -40, 1, 0)
-Title.Position = UDim2.new(0, 10, 0, 0)
+Title.Size = UDim2.new(1,-40,1,0)
+Title.Position = UDim2.new(0,10,0,0)
 Title.BackgroundTransparency = 1
 Title.Text = "XHARDXS2"
 Title.Font = Enum.Font.GothamBold
@@ -49,40 +47,35 @@ Title.TextScaled = true
 Title.TextColor3 = Color3.new(1,1,1)
 
 local MinBtn = Instance.new("TextButton", TopBar)
-MinBtn.Size = UDim2.new(0, 30, 0, 30)
-MinBtn.Position = UDim2.new(1, -35, 0.5, -15)
+MinBtn.Size = UDim2.new(0,30,0,30)
+MinBtn.Position = UDim2.new(1,-35,0.5,-15)
 MinBtn.Text = "-"
-MinBtn.Font = Enum.Font.GothamBold
 MinBtn.TextScaled = true
 MinBtn.BackgroundColor3 = Color3.fromRGB(50,50,50)
 MinBtn.TextColor3 = Color3.new(1,1,1)
-MinBtn.BorderSizePixel = 0
-Instance.new("UICorner", MinBtn).CornerRadius = UDim.new(0, 8)
+Instance.new("UICorner", MinBtn).CornerRadius = UDim.new(0,8)
 
 local Content = Instance.new("Frame", Main)
 Content.Position = UDim2.new(0,0,0,40)
 Content.Size = UDim2.new(1,0,1,-40)
 Content.BackgroundTransparency = 1
 
--- BUTTON CREATOR
-local function CreateButton(text, y, callback)
-    local btn = Instance.new("TextButton", Content)
-    btn.Size = UDim2.new(1,-20,0,35)
-    btn.Position = UDim2.new(0,10,0,y)
-    btn.Text = text
-    btn.Font = Enum.Font.Gotham
-    btn.TextScaled = true
-    btn.BackgroundColor3 = Color3.fromRGB(40,40,40)
-    btn.TextColor3 = Color3.new(1,1,1)
-    btn.BorderSizePixel = 0
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
-    btn.MouseButton1Click:Connect(function()
-        callback(btn)
-    end)
-    return btn
+-- BOTÕES
+local function Button(text,y,callback)
+    local b = Instance.new("TextButton", Content)
+    b.Size = UDim2.new(1,-20,0,35)
+    b.Position = UDim2.new(0,10,0,y)
+    b.Text = text
+    b.TextScaled = true
+    b.BackgroundColor3 = Color3.fromRGB(40,40,40)
+    b.TextColor3 = Color3.new(1,1,1)
+    b.BorderSizePixel = 0
+    Instance.new("UICorner", b).CornerRadius = UDim.new(0,8)
+    b.MouseButton1Click:Connect(function() callback(b) end)
+    return b
 end
 
--- MINIMIZE
+-- MINIMIZAR
 local minimized = false
 local normalSize = Main.Size
 MinBtn.MouseButton1Click:Connect(function()
@@ -93,60 +86,77 @@ MinBtn.MouseButton1Click:Connect(function()
 end)
 
 -- ======================================
--- ESP PLAYERS
+-- ESP PLAYERS (ATUALIZA SOZINHO)
 -- ======================================
 
-CreateButton("ESP Players: OFF", 10, function(btn)
-    espPlayers = not espPlayers
-    btn.Text = espPlayers and "ESP Players: ON" or "ESP Players: OFF"
+local function applyPlayerESP(char)
+    if not espPlayers then return end
+    if not char:FindFirstChild("XHARDXS2_PLAYER") then
+        local h = Instance.new("Highlight")
+        h.Name = "XHARDXS2_PLAYER"
+        h.FillColor = Color3.fromRGB(0,255,0)
+        h.OutlineColor = Color3.new(0,0,0)
+        h.Parent = char
+    end
+end
 
-    for _,plr in ipairs(Players:GetPlayers()) do
-        if plr ~= Player and plr.Character then
-            local h = plr.Character:FindFirstChild("XHARDXS2_ESP_PLAYER")
-            if espPlayers and not h then
-                h = Instance.new("Highlight")
-                h.Name = "XHARDXS2_ESP_PLAYER"
-                h.FillColor = Color3.fromRGB(0,255,0)
-                h.Parent = plr.Character
-            elseif not espPlayers and h then
-                h:Destroy()
+local function removePlayerESP(char)
+    local h = char:FindFirstChild("XHARDXS2_PLAYER")
+    if h then h:Destroy() end
+end
+
+Players.PlayerAdded:Connect(function(plr)
+    plr.CharacterAdded:Connect(applyPlayerESP)
+end)
+
+Button("ESP Players: OFF",10,function(b)
+    espPlayers = not espPlayers
+    b.Text = espPlayers and "ESP Players: ON" or "ESP Players: OFF"
+    for _,plr in pairs(Players:GetPlayers()) do
+        if plr.Character then
+            if espPlayers then
+                applyPlayerESP(plr.Character)
+            else
+                removePlayerESP(plr.Character)
             end
         end
     end
 end)
 
 -- ======================================
--- ESP BASE / OBJETOS (CORRIGIDO)
+-- ESP BASE / OBJETOS (TEMPO REAL)
 -- ======================================
 
-local function applyBaseESP()
-    for _,obj in ipairs(workspace:GetDescendants()) do
-        if obj:IsA("Model") or obj:IsA("Part") then
-            local name = obj.Name:lower()
-
-            if name:find("base") or name:find("brainrot") then
-                if espBase and not obj:FindFirstChild("XHARDXS2_ESP_BASE") then
-                    local h = Instance.new("Highlight")
-                    h.Name = "XHARDXS2_ESP_BASE"
-                    h.FillColor = Color3.fromRGB(0,150,255)
-                    h.OutlineColor = Color3.new(0,0,0)
-                    h.Parent = obj
-                end
-            end
-        end
+local function applyBaseESP(obj)
+    if not espBase then return end
+    if (obj:IsA("Model") or obj:IsA("Part")) and not obj:FindFirstChild("XHARDXS2_BASE") then
+        local h = Instance.new("Highlight")
+        h.Name = "XHARDXS2_BASE"
+        h.FillColor = Color3.fromRGB(0,150,255)
+        h.OutlineColor = Color3.new(0,0,0)
+        h.Parent = obj
     end
 end
 
-CreateButton("ESP Base/Objetos: OFF", 55, function(btn)
-    espBase = not espBase
-    btn.Text = espBase and "ESP Base/Objetos: ON" or "ESP Base/Objetos: OFF"
+local function removeBaseESP(obj)
+    local h = obj:FindFirstChild("XHARDXS2_BASE")
+    if h then h:Destroy() end
+end
 
+workspace.DescendantAdded:Connect(function(obj)
     if espBase then
-        applyBaseESP()
-    else
-        for _,obj in ipairs(workspace:GetDescendants()) do
-            local h = obj:FindFirstChild("XHARDXS2_ESP_BASE")
-            if h then h:Destroy() end
+        applyBaseESP(obj)
+    end
+end)
+
+Button("ESP Base/Objetos: OFF",55,function(b)
+    espBase = not espBase
+    b.Text = espBase and "ESP Base/Objetos: ON" or "ESP Base/Objetos: OFF"
+    for _,obj in pairs(workspace:GetDescendants()) do
+        if espBase then
+            applyBaseESP(obj)
+        else
+            removeBaseESP(obj)
         end
     end
 end)
@@ -155,7 +165,7 @@ end)
 -- SALVAR BASE
 -- ======================================
 
-CreateButton("Salvar Base", 100, function()
+Button("Salvar Base",100,function()
     local hrp = Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
     if hrp then
         savedBaseCFrame = hrp.CFrame
@@ -166,65 +176,19 @@ end)
 -- AUTO TP BASE ON / OFF
 -- ======================================
 
-CreateButton("Auto TP Base: OFF", 145, function(btn)
+Button("Auto TP Base: OFF",145,function(b)
     autoTpBase = not autoTpBase
-    btn.Text = autoTpBase and "Auto TP Base: ON" or "Auto TP Base: OFF"
+    b.Text = autoTpBase and "Auto TP Base: ON" or "Auto TP Base: OFF"
 end)
-
-local function teleportWithCarpet()
-    if not autoTpBase or not savedBaseCFrame then return end
-
-    local char = Player.Character
-    local hrp = char and char:FindFirstChild("HumanoidRootPart")
-    if not hrp then return end
-
-    local carpet = Instance.new("Part")
-    carpet.Size = Vector3.new(6,0.4,6)
-    carpet.Anchored = true
-    carpet.CanCollide = true
-    carpet.Material = Enum.Material.Neon
-    carpet.Color = Color3.fromRGB(0,150,255)
-    carpet.CFrame = hrp.CFrame * CFrame.new(0,-3,0)
-    carpet.Parent = workspace
-
-    hrp.Anchored = true
-
-    TweenService:Create(
-        carpet,
-        TweenInfo.new(1.6, Enum.EasingStyle.Linear),
-        {CFrame = savedBaseCFrame * CFrame.new(0,-3,0)}
-    ):Play()
-
-    task.wait(1.6)
-
-    hrp.CFrame = savedBaseCFrame
-    hrp.Anchored = false
-    carpet:Destroy()
-end
-
--- DETECTA BRAINROT INVISÍVEL
-local function watchBrainrot(char)
-    char.DescendantAdded:Connect(function(obj)
-        if autoTpBase and (obj:IsA("Weld") or obj:IsA("WeldConstraint") or obj:IsA("Motor6D")) then
-            task.wait(0.15)
-            teleportWithCarpet()
-        end
-    end)
-end
-
-if Player.Character then
-    watchBrainrot(Player.Character)
-end
-Player.CharacterAdded:Connect(watchBrainrot)
 
 -- ======================================
 -- RESET
 -- ======================================
 
-CreateButton("Reset Character", 190, function()
+Button("Reset Character",190,function()
     if Player.Character then
         Player.Character:BreakJoints()
     end
 end)
 
-print("XHARDXS2 carregado com sucesso")
+print("XHARDXS2 carregado e ESPs atualizando corretamente")
