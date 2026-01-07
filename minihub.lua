@@ -1,196 +1,102 @@
--- ==============================
--- MINI HUB FINAL CORRIGIDO
--- ==============================
+-- XHARDXS2 Hub | Sem Speed / Sem Jump | Com minimizar
+repeat task.wait() until game:IsLoaded()
 
 -- SERVICES
 local Players = game:GetService("Players")
-local UserInputService = game:GetService("UserInputService")
-local VirtualUser = game:GetService("VirtualUser")
-
 local Player = Players.LocalPlayer
 
--- ==============================
--- VARIÁVEIS
--- ==============================
-
-local jumpOn = false
-local autoTpOn = false
-local espPlayersOn = false
-
-local savedBaseCFrame = nil
-local baseMarker
-local canTeleport = true
-
--- ==============================
--- ANTI AFK
--- ==============================
-
-Player.Idled:Connect(function()
-    VirtualUser:Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
-    task.wait(1)
-    VirtualUser:Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
-end)
-
--- ==============================
--- GUI
--- ==============================
-
-local ScreenGui = Instance.new("ScreenGui", Player.PlayerGui)
-ScreenGui.Name = "MiniHub"
+-- GUI SETUP
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "XHARDXS2"
 ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = Player:WaitForChild("PlayerGui")
 
-local Main = Instance.new("Frame", ScreenGui)
-Main.Size = UDim2.new(0,260,0,360)
-Main.Position = UDim2.new(0.5,-130,0.5,-180)
-Main.BackgroundColor3 = Color3.fromRGB(30,30,30)
+-- MAIN FRAME
+local Main = Instance.new("Frame")
+Main.Parent = ScreenGui
+Main.Size = UDim2.new(0, 240, 0, 200)
+Main.Position = UDim2.new(0, 20, 0.3, 0)
+Main.BackgroundColor3 = Color3.fromRGB(25,25,25)
+Main.BorderSizePixel = 0
 Main.Active = true
 Main.Draggable = true
+Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 10)
 
-local Title = Instance.new("TextLabel", Main)
-Title.Size = UDim2.new(1,0,0,40)
-Title.Text = "MiniHub Final"
-Title.TextColor3 = Color3.new(1,1,1)
+-- TOP BAR
+local TopBar = Instance.new("Frame")
+TopBar.Parent = Main
+TopBar.Size = UDim2.new(1, 0, 0, 40)
+TopBar.BackgroundTransparency = 1
+
+local Title = Instance.new("TextLabel")
+Title.Parent = TopBar
+Title.Size = UDim2.new(1, -40, 1, 0)
+Title.Position = UDim2.new(0, 10, 0, 0)
 Title.BackgroundTransparency = 1
+Title.Text = "XHARDXS2"
+Title.TextColor3 = Color3.fromRGB(255,255,255)
+Title.Font = Enum.Font.GothamBold
 Title.TextScaled = true
 
-local function createButton(text, posY, callback)
-    local btn = Instance.new("TextButton", Main)
-    btn.Size = UDim2.new(1,-20,0,30)
-    btn.Position = UDim2.new(0,10,0,posY)
+-- MINIMIZE BUTTON
+local MinBtn = Instance.new("TextButton")
+MinBtn.Parent = TopBar
+MinBtn.Size = UDim2.new(0, 30, 0, 30)
+MinBtn.Position = UDim2.new(1, -35, 0.5, -15)
+MinBtn.Text = "-"
+MinBtn.Font = Enum.Font.GothamBold
+MinBtn.TextScaled = true
+MinBtn.BackgroundColor3 = Color3.fromRGB(50,50,50)
+MinBtn.TextColor3 = Color3.fromRGB(255,255,255)
+MinBtn.BorderSizePixel = 0
+Instance.new("UICorner", MinBtn).CornerRadius = UDim.new(0, 6)
+
+-- CONTENT
+local Content = Instance.new("Frame")
+Content.Parent = Main
+Content.Position = UDim2.new(0, 0, 0, 40)
+Content.Size = UDim2.new(1, 0, 1, -40)
+Content.BackgroundTransparency = 1
+
+-- BUTTON CREATOR
+local function CreateButton(text, y)
+    local btn = Instance.new("TextButton")
+    btn.Parent = Content
+    btn.Size = UDim2.new(1, -20, 0, 35)
+    btn.Position = UDim2.new(0, 10, 0, y)
+    btn.BackgroundColor3 = Color3.fromRGB(40,40,40)
+    btn.TextColor3 = Color3.fromRGB(255,255,255)
     btn.Text = text
-    btn.BackgroundColor3 = Color3.fromRGB(50,50,50)
-    btn.TextColor3 = Color3.new(1,1,1)
+    btn.Font = Enum.Font.Gotham
     btn.TextScaled = true
-    btn.MouseButton1Click:Connect(function()
-        callback(btn)
-    end)
+    btn.BorderSizePixel = 0
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
     return btn
 end
 
--- ==============================
--- INFINITE JUMP (SEGURO)
--- ==============================
+-- MINIMIZE FUNCTION
+local minimized = false
+local normalSize = Main.Size
 
-createButton("Infinite Jump: OFF", 50, function(btn)
-    jumpOn = not jumpOn
-    btn.Text = jumpOn and "Infinite Jump: ON" or "Infinite Jump: OFF"
-end)
-
-UserInputService.JumpRequest:Connect(function()
-    if jumpOn then
-        local hum = Player.Character and Player.Character:FindFirstChildOfClass("Humanoid")
-        if hum and hum:GetState() ~= Enum.HumanoidStateType.Dead then
-            hum:ChangeState(Enum.HumanoidStateType.Jumping)
-        end
+MinBtn.MouseButton1Click:Connect(function()
+    minimized = not minimized
+    if minimized then
+        Content.Visible = false
+        Main.Size = UDim2.new(0, 240, 0, 40)
+        MinBtn.Text = "+"
+    else
+        Content.Visible = true
+        Main.Size = normalSize
+        MinBtn.Text = "-"
     end
 end)
 
--- ==============================
--- SALVAR BASE + MARCADOR VISUAL
--- ==============================
-
-createButton("Salvar Base", 90, function()
-    local hrp = Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
-    if not hrp then return end
-
-    savedBaseCFrame = hrp.CFrame
-
-    if baseMarker then baseMarker:Destroy() end
-
-    local sphere = Instance.new("Part")
-    sphere.Shape = Enum.PartType.Ball
-    sphere.Size = Vector3.new(1,1,1)
-    sphere.Position = hrp.Position - Vector3.new(0,2.5,0)
-    sphere.Anchored = true
-    sphere.CanCollide = false
-    sphere.Material = Enum.Material.Neon
-    sphere.Color = Color3.fromRGB(0,150,255)
-    sphere.Parent = workspace
-
-    local a0 = Instance.new("Attachment", sphere)
-    local a1 = Instance.new("Attachment", sphere)
-    a1.Position = Vector3.new(0,6,0)
-
-    local beam = Instance.new("Beam")
-    beam.Attachment0 = a0
-    beam.Attachment1 = a1
-    beam.Width0 = 0.1
-    beam.Width1 = 0.1
-    beam.Color = ColorSequence.new(sphere.Color)
-    beam.FaceCamera = true
-    beam.Parent = sphere
-
-    baseMarker = sphere
-end)
-
--- ==============================
--- AUTO TP BRAINROT (INVÍSIVEL)
--- ==============================
-
-createButton("Auto TP Brainrot: OFF", 130, function(btn)
-    autoTpOn = not autoTpOn
-    btn.Text = autoTpOn and "Auto TP Brainrot: ON" or "Auto TP Brainrot: OFF"
-end)
-
-local function teleportToBase()
-    if not autoTpOn or not savedBaseCFrame or not canTeleport then return end
-    canTeleport = false
-
-    task.wait(0.15)
-
-    local hrp = Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
-    if hrp then
-        hrp.CFrame = savedBaseCFrame
-    end
-
-    task.delay(2, function()
-        canTeleport = true
-    end)
-end
-
-local function watchCharacter(char)
-    char.DescendantAdded:Connect(function(obj)
-        if obj:IsA("Weld") or obj:IsA("WeldConstraint") or obj:IsA("Motor6D") then
-            teleportToBase()
-        end
-    end)
-end
-
-if Player.Character then watchCharacter(Player.Character) end
-Player.CharacterAdded:Connect(watchCharacter)
-
--- ==============================
--- ESP PLAYERS (AUTO REAPLICA)
--- ==============================
-
-local function applyESP(plr)
-    if plr ~= Player and plr.Character then
-        if espPlayersOn and not plr.Character:FindFirstChildOfClass("Highlight") then
-            local h = Instance.new("Highlight", plr.Character)
-            h.FillColor = Color3.fromRGB(0,255,0)
-        end
-    end
-end
-
-createButton("ESP Players: OFF", 170, function(btn)
-    espPlayersOn = not espPlayersOn
-    btn.Text = espPlayersOn and "ESP Players: ON" or "ESP Players: OFF"
-
-    for _,plr in ipairs(Players:GetPlayers()) do
-        if not espPlayersOn and plr.Character then
-            local h = plr.Character:FindFirstChildOfClass("Highlight")
-            if h then h:Destroy() end
-        else
-            applyESP(plr)
-        end
+-- RESET BUTTON
+local ResetBtn = CreateButton("Reset Character", 20)
+ResetBtn.MouseButton1Click:Connect(function()
+    if Player.Character then
+        Player.Character:BreakJoints()
     end
 end)
 
-Players.PlayerAdded:Connect(function(plr)
-    plr.CharacterAdded:Connect(function()
-        task.wait(1)
-        applyESP(plr)
-    end)
-end)
-
-print("MiniHub FINAL carregado com sucesso")
+print("XHARDXS2 carregado com sucesso")
